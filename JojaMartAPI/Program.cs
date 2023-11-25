@@ -18,8 +18,8 @@ else
     connection = Environment.GetEnvironmentVariable("AZURE_SQL_CONNECTIONSTRING");
 }
 
-builder.Services.AddDbContext<_DbContext>(options =>
-    options.UseSqlServer(connection));
+//builder.Services.AddDbContext<_DbContext>(options =>
+    //options.UseSqlServer(connection));
 
 var app = builder.Build();
 
