@@ -23,5 +23,11 @@ namespace JojaMartAPI.Controllers
             return Ok(allUsers);
         }
 
+        [HttpPut(Name = "CreateNewUser")]
+        public ActionResult<User> CreateNewUser(int id)
+        {
+            return Ok();
+        }
+
     }
 }
