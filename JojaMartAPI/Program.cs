@@ -1,3 +1,9 @@
+//code
+
+
+using JojaMartAPI.Data;
+using Microsoft.EntityFrameworkCore;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
@@ -8,6 +14,7 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 var connection = String.Empty;
+
 if (builder.Environment.IsDevelopment())
 {
     builder.Configuration.AddEnvironmentVariables().AddJsonFile("appsettings.Development.json");
@@ -18,8 +25,8 @@ else
     connection = Environment.GetEnvironmentVariable("AZURE_SQL_CONNECTIONSTRING");
 }
 
-//builder.Services.AddDbContext<_DbContext>(options =>
-    //options.UseSqlServer(connection));
+builder.Services.AddDbContext<JojaMartDbContext>(options =>
+    options.UseSqlServer(connection));
 
 var app = builder.Build();
 
