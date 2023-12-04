@@ -12,7 +12,7 @@ namespace JojaMartAPI.Models;
 public partial class User
 {
     [Key]
-    [Column("ID")]
+    [Column("Id")]
     public int Id { get; set; }
 
     [Column("first_name")]

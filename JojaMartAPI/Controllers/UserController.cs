@@ -33,6 +33,31 @@ namespace JojaMartAPI.Controllers
             return Ok(item);
 
         }
+  
+        [HttpGet("Data",Name = "UserLogin")]
+        public ActionResult<User> UserLogin(string userEmail, string userPassword)
+        {
+            try
+            {
+                var allUsers = _dbContext.Users.ToList();
+                foreach (var user in allUsers)
+                {
+                    if (user.Email == userEmail && user.Password == userPassword)
+                    {
+                        return Ok(user);
+                    }
+                    else
+                    {
+                        return BadRequest("no user found, or wrong credentials");
+                    }
+                }
+            }catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+            return Ok();
+      
+        }
 
         [HttpPost(Name = "CreateNewUser")]
         public ActionResult<User> CreateNewUser(CreateUserDTO userData)
@@ -73,6 +98,7 @@ namespace JojaMartAPI.Controllers
                 return BadRequest("Database constraint violation: " + ex.Message);
             }
         }
+      
     }
 }
 
