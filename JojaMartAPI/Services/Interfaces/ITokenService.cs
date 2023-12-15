@@ -4,6 +4,9 @@ namespace JojaMartAPI.Services.Interfaces
 {
     public interface ITokenService
     {
-        public string CreateJWT(User user);
+        public string CreateAcessJwt(User user);
+        public string CreateRefreshJwt();
+        public bool ValidateRefreshToken(string refreshToken);
+
     }
 }

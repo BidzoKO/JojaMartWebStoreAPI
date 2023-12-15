@@ -50,14 +50,11 @@ namespace JojaMartAPI.Controllers
 
                 if (user != null && BCrypt.Net.BCrypt.Verify(userCredentials.Password, user.Password))
                 {
-                    var AcessToken = _tokenService.CreateJWT(user);
-
                     return Ok(new AuthenticatedUserResponse()
                     {
-                        AccessJwt = AcessToken,
-                        RefreshJwt = null,//need to change
+                        AccessToken = _tokenService.CreateAcessJwt(user),
+                        RefreshToken = _tokenService.CreateRefreshJwt(),
                     });
-
                 }
                 else
                 {
@@ -72,8 +69,24 @@ namespace JojaMartAPI.Controllers
 
         }
 
+        [HttpPost("RefreshJwt", Name = "RefreshJwt")]
+        public async Task<IActionResult> RefreshAcessToken([FromBody] RefreshRequest refreshRequest)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest("invalid model state");
+            }
+
+            var tokenValidity = _tokenService.ValidateRefreshToken(refreshRequest.RefreshToken);
+
+            if (!tokenValidity)
+            {
+                return BadRequest("invalid token");
+            }
+        }
+
         [HttpPost("CreateNewUser", Name = "CreateNewUser")]
-        public ActionResult<User> CreateNewUser(CreateUserDTO userData)
+        public ActionResult<User> CreateNewUser([FromBody] CreateUserDTO userData)
         {
             try
             {

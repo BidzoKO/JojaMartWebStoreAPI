@@ -2,7 +2,7 @@
 {
     public class AuthenticatedUserResponse
     {
-        public string AccessJwt { get; set; }
-        public string RefreshJwt { get; set; }
+        public string AccessToken { get; set; }
+        public string RefreshToken { get; set; }
     }
 }

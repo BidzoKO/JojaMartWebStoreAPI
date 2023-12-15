@@ -18,7 +18,7 @@ namespace JojaMartAPI.Services
             _configuration = configuration;
         }
 
-        public string CreateJWT(User user)
+        public string CreateAcessJwt(User user)
         {
             List<Claim> claims = new List<Claim>
             {
@@ -27,6 +27,20 @@ namespace JojaMartAPI.Services
                 new Claim(ClaimTypes.Email, user.Email),
             };
 
+            var expDate = DateTime.UtcNow.AddMinutes(15);
+
+            return (GenerateJwt(expDate, claims));
+        }
+
+        public string CreateRefreshJwt()
+        {
+            var expDate = DateTime.UtcNow.AddMonths(3);
+
+            return GenerateJwt(expDate);
+        }
+
+        private string GenerateJwt(DateTime expDate, IEnumerable<Claim>? claims = null)
+        {
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration.GetSection("AppSettings:JwtConfiguration:SecretKey").Value!));
 
             var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha512Signature);
@@ -36,7 +50,7 @@ namespace JojaMartAPI.Services
                 "https://localhost:7177/",
                 claims,
                 DateTime.UtcNow,
-                DateTime.UtcNow.AddMinutes(30),
+                expDate,
                 creds
                 );
 
@@ -45,5 +59,32 @@ namespace JojaMartAPI.Services
             return (newJwt);
         }
 
+        public bool ValidateRefreshToken(string refreshToken)
+        {
+            TokenValidationParameters validationParameters = new TokenValidationParameters()
+            {
+                IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration.GetSection("AppSettings:JwtConfiguration:SecretKey").Value!)),
+                ValidAudience = "https://localhost:7177/",
+                ValidIssuer = "https://localhost:7177/",
+                ValidateIssuerSigningKey = true,
+                ValidateIssuer = true,
+                ValidateAudience = true,
+                ClockSkew = TimeSpan.Zero,
+            };
+
+            JwtSecurityTokenHandler TokenHandler = new JwtSecurityTokenHandler();
+
+            try
+            {
+                TokenHandler.ValidateToken(refreshToken, validationParameters, out SecurityToken validatedToken);
+                return true;
+            }
+            catch (Exception)
+            {
+
+                return false;
+            }
+
+        }
     }
 }
