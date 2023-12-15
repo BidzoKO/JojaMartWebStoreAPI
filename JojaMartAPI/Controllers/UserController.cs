@@ -83,6 +83,7 @@ namespace JojaMartAPI.Controllers
             {
                 return BadRequest("invalid token");
             }
+            return Ok();
         }
 
         [HttpPost("CreateNewUser", Name = "CreateNewUser")]
