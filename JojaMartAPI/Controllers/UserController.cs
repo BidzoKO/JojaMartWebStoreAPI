@@ -1,5 +1,9 @@
 ﻿using JojaMartAPI.Data;
+using JojaMartAPI.DTOs.JwtDtos;
+using JojaMartAPI.DTOs.UserDtos;
 using JojaMartAPI.Models;
+using JojaMartAPI.Services.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -7,23 +11,24 @@ namespace JojaMartAPI.Controllers
 {
     [ApiController]
     [Route("[controller]")]
-    public class UserController : ControllerBase
+    public class UserController : ControllerBase, IUserService
     {
-        private readonly JojaMartDbContext _dbContext;
+        private readonly JojaMartDbContext _dbContext; ITokenService _tokenService;
 
-        public UserController(JojaMartDbContext dbContext)
+        public UserController(JojaMartDbContext dbContext, ITokenService tokenService)
         {
+            _tokenService = tokenService;
             _dbContext = dbContext;
         }
 
-        [HttpGet(Name = "GetAllUsers")]
+        [HttpGet("GetAllUsers", Name = "GetAllUsers")]
         public ActionResult<List<User>> GetAllUsers()
         {
             var allUsers = _dbContext.Users.ToList();
             return Ok(allUsers);
         }
 
-        [HttpGet("Id", Name = "GetUserById")]
+        [HttpGet("GetUserById", Name = "GetUserById"), Authorize()]
         public ActionResult<User> GetUserById(int Id)
         {
             var _userDb = _dbContext.Users.ToList();
@@ -33,33 +38,41 @@ namespace JojaMartAPI.Controllers
             return Ok(item);
 
         }
-  
-        [HttpGet("Data",Name = "UserLogin")]
-        public ActionResult<User> UserLogin(string userEmail, string userPassword)
+
+        [HttpPost("UserLogin", Name = "UserLogin")]
+        public ActionResult<AuthenticatedUserResponse> UserLogin([FromBody] UserLoginDTO userCredentials)
         {
             try
             {
                 var allUsers = _dbContext.Users.ToList();
-                foreach (var user in allUsers)
+
+                var user = allUsers.FirstOrDefault(e => e.Email == userCredentials.Email);
+
+                if (user != null && BCrypt.Net.BCrypt.Verify(userCredentials.Password, user.Password))
                 {
-                    if (user.Email == userEmail && user.Password == userPassword)
+                    var AcessToken = _tokenService.CreateJWT(user);
+
+                    return Ok(new AuthenticatedUserResponse()
                     {
-                        return Ok(user);
-                    }
-                    else
-                    {
-                        return BadRequest("no user found, or wrong credentials");
-                    }
+                        AccessJwt = AcessToken,
+                        RefreshJwt = null,//need to change
+                    });
+
                 }
-            }catch (Exception ex)
+                else
+                {
+                    return BadRequest("Wrong email or password");
+                }
+
+            }
+            catch (Exception ex)
             {
                 return BadRequest(ex.Message);
             }
-            return Ok();
-      
+
         }
 
-        [HttpPost(Name = "CreateNewUser")]
+        [HttpPost("CreateNewUser", Name = "CreateNewUser")]
         public ActionResult<User> CreateNewUser(CreateUserDTO userData)
         {
             try
@@ -67,13 +80,14 @@ namespace JojaMartAPI.Controllers
                 var _userDb = _dbContext.Users;
                 if (ModelState.IsValid)
                 {
+
                     var newUser = new User
                     {
                         FirstName = userData.FirstName,
                         LastName = userData.LastName,
                         Username = userData.Username,
                         Email = userData.Email,
-                        Password = userData.Password,
+                        Password = BCrypt.Net.BCrypt.HashPassword(userData.Password),
                         Dob = userData.Dob,
                         Gender = userData.Gender,
                         Address = userData.Address,
@@ -98,7 +112,7 @@ namespace JojaMartAPI.Controllers
                 return BadRequest("Database constraint violation: " + ex.Message);
             }
         }
-      
+
     }
 }
 

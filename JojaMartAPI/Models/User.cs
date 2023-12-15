@@ -1,8 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using Microsoft.EntityFrameworkCore;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using Microsoft.EntityFrameworkCore;
 
 namespace JojaMartAPI.Models;
 
@@ -35,7 +33,7 @@ public partial class User
     [Unicode(false)]
     public string Email { get; set; } = null!;
 
-    [Column("password")]
+    [Column("password_hash")]
     [StringLength(255)]
     [Unicode(false)]
     public string Password { get; set; } = null!;
