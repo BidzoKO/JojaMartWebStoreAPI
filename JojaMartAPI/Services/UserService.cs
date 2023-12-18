@@ -1,5 +1,4 @@
-﻿using JojaMartAPI.Data;
-using JojaMartAPI.Services.Interfaces;
+﻿using JojaMartAPI.Services.Interfaces;
 
 namespace JojaMartAPI.Services
 {

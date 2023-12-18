@@ -1,5 +1,4 @@
-﻿using JojaMartAPI.Data;
-using JojaMartAPI.Models;
+﻿using JojaMartAPI.DTOs.JwtDtos;
 using JojaMartAPI.Services.Interfaces;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
@@ -18,7 +17,8 @@ namespace JojaMartAPI.Services
             _configuration = configuration;
         }
 
-        public string CreateAcessJwt(User user)
+
+        public string GenerateAcessJwt(User user)
         {
             List<Claim> claims = new List<Claim>
             {
@@ -27,17 +27,36 @@ namespace JojaMartAPI.Services
                 new Claim(ClaimTypes.Email, user.Email),
             };
 
-            var expDate = DateTime.UtcNow.AddMinutes(15);
+            var expDate = DateTime.UtcNow.AddMinutes(10);
 
             return (GenerateJwt(expDate, claims));
         }
 
-        public string CreateRefreshJwt()
+
+        public string GenerateRefreshJwt()
         {
             var expDate = DateTime.UtcNow.AddMonths(3);
 
             return GenerateJwt(expDate);
         }
+
+
+        public Task StoreRefreshToken(UserRefreshToken token)
+        {
+            _dbContext.Add(token);
+            _dbContext.SaveChanges();
+
+            return Task.CompletedTask;
+        }
+
+
+        public Task<UserRefreshToken?> GetTokenDto(string token)
+        {
+            UserRefreshToken? refreshTokenDbo = _dbContext.UserRefreshTokens.FirstOrDefault(r => r.RefreshToken == token);
+
+            return Task.FromResult(refreshTokenDbo);
+        }
+
 
         private string GenerateJwt(DateTime expDate, IEnumerable<Claim>? claims = null)
         {
@@ -58,6 +77,7 @@ namespace JojaMartAPI.Services
 
             return (newJwt);
         }
+
 
         public bool ValidateRefreshToken(string refreshToken)
         {
@@ -86,5 +106,38 @@ namespace JojaMartAPI.Services
             }
 
         }
+
+
+        public async Task<AuthenticatedUserResponse> AuthenticateUser(User user)
+        {
+            var accessToken = GenerateAcessJwt(user);
+            var refreshToken = GenerateRefreshJwt();
+
+            UserRefreshToken userRefreshToken = new UserRefreshToken()
+            {
+                UserId = user.Id,
+                RefreshToken = refreshToken,
+            };
+            await StoreRefreshToken(userRefreshToken);
+
+            return (new AuthenticatedUserResponse()
+            {
+                AccessToken = accessToken,
+                RefreshToken = refreshToken,
+            });
+        }
+
+
+        public Task DeleteAllRefreshTokens(int userId)
+        {
+            var refreshTokens = _dbContext.UserRefreshTokens.Where(r => r.UserId == userId);
+
+            _dbContext.UserRefreshTokens.RemoveRange(refreshTokens);
+
+            _dbContext.SaveChanges();
+
+            return Task.CompletedTask;
+        }
+
     }
 }

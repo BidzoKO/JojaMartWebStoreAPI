@@ -1,9 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using JojaMartAPI.Models;
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 
-namespace JojaMartAPI.Data;
 
 public partial class JojaMartDbContext : DbContext
 {
@@ -18,6 +14,9 @@ public partial class JojaMartDbContext : DbContext
 
     public virtual DbSet<User> Users { get; set; }
 
+    public virtual DbSet<UserRefreshToken> UserRefreshTokens { get; set; }
+
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<User>(entity =>
@@ -25,6 +24,15 @@ public partial class JojaMartDbContext : DbContext
             entity.HasKey(e => e.Id).HasName("PK__users__3214EC272BDBC05D");
 
             entity.Property(e => e.RegistrationDate).HasDefaultValueSql("(getdate())");
+        });
+
+        modelBuilder.Entity<UserRefreshToken>(entity =>
+        {
+            entity.Property(e => e.Id).ValueGeneratedOnAdd();
+
+            entity.HasOne(d => d.IdNavigation).WithOne(p => p.UserRefreshToken)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_user_refresh_tokens_users");
         });
 
         OnModelCreatingPartial(modelBuilder);

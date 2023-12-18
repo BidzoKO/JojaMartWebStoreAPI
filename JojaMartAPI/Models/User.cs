@@ -2,7 +2,6 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
-namespace JojaMartAPI.Models;
 
 [Table("users")]
 [Index("Email", Name = "UQ__users__AB6E6164BAE3FE3F", IsUnique = true)]
@@ -10,7 +9,6 @@ namespace JojaMartAPI.Models;
 public partial class User
 {
     [Key]
-    [Column("Id")]
     public int Id { get; set; }
 
     [Column("first_name")]
@@ -36,7 +34,7 @@ public partial class User
     [Column("password_hash")]
     [StringLength(255)]
     [Unicode(false)]
-    public string Password { get; set; } = null!;
+    public string PasswordHash { get; set; } = null!;
 
     [Column("dob", TypeName = "date")]
     public DateTime Dob { get; set; }
@@ -76,4 +74,7 @@ public partial class User
     [StringLength(255)]
     [Unicode(false)]
     public string? ProfilePictureUrl { get; set; }
+
+    [InverseProperty("IdNavigation")]
+    public virtual UserRefreshToken? UserRefreshToken { get; set; }
 }

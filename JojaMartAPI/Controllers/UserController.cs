@@ -1,11 +1,10 @@
-﻿using JojaMartAPI.Data;
-using JojaMartAPI.DTOs.JwtDtos;
+﻿using JojaMartAPI.DTOs.JwtDtos;
 using JojaMartAPI.DTOs.UserDtos;
-using JojaMartAPI.Models;
 using JojaMartAPI.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System.Security.Claims;
 
 namespace JojaMartAPI.Controllers
 {
@@ -21,12 +20,14 @@ namespace JojaMartAPI.Controllers
             _dbContext = dbContext;
         }
 
+
         [HttpGet("GetAllUsers", Name = "GetAllUsers")]
         public ActionResult<List<User>> GetAllUsers()
         {
             var allUsers = _dbContext.Users.ToList();
             return Ok(allUsers);
         }
+
 
         [HttpGet("GetUserById", Name = "GetUserById"), Authorize()]
         public ActionResult<User> GetUserById(int Id)
@@ -39,8 +40,9 @@ namespace JojaMartAPI.Controllers
 
         }
 
+
         [HttpPost("UserLogin", Name = "UserLogin")]
-        public ActionResult<AuthenticatedUserResponse> UserLogin([FromBody] UserLoginDTO userCredentials)
+        public async Task<ActionResult<AuthenticatedUserResponse>> UserLogin([FromBody] UserLoginDTO userCredentials)
         {
             try
             {
@@ -48,17 +50,15 @@ namespace JojaMartAPI.Controllers
 
                 var user = allUsers.FirstOrDefault(e => e.Email == userCredentials.Email);
 
-                if (user != null && BCrypt.Net.BCrypt.Verify(userCredentials.Password, user.Password))
+
+
+                if (user != null && BCrypt.Net.BCrypt.Verify(userCredentials.Password, user.PasswordHash))
                 {
-                    return Ok(new AuthenticatedUserResponse()
-                    {
-                        AccessToken = _tokenService.CreateAcessJwt(user),
-                        RefreshToken = _tokenService.CreateRefreshJwt(),
-                    });
+                    return Ok(await _tokenService.AuthenticateUser(user));
                 }
                 else
                 {
-                    return BadRequest("Wrong email or password");
+                    return BadRequest("Wrong email or password or the user doesnt exist");
                 }
 
             }
@@ -68,6 +68,25 @@ namespace JojaMartAPI.Controllers
             }
 
         }
+
+
+        [HttpDelete("Logout", Name = "Logout"), Authorize]
+        public async Task<IActionResult> UserLogout()
+        {
+            var userStringId = HttpContext.User.FindFirstValue("Id");
+
+            if (userStringId == null)
+            {
+                return BadRequest();
+            }
+
+            int.TryParse(userStringId, out int parsedId);
+
+            await _tokenService.DeleteAllRefreshTokens(parsedId);
+
+            return NoContent();
+        }
+
 
         [HttpPost("RefreshJwt", Name = "RefreshJwt")]
         public async Task<IActionResult> RefreshAcessToken([FromBody] RefreshRequest refreshRequest)
@@ -83,8 +102,20 @@ namespace JojaMartAPI.Controllers
             {
                 return BadRequest("invalid token");
             }
-            return Ok();
+
+            UserRefreshToken? userRefreshTokenDbo = await _tokenService.GetTokenDto(refreshRequest.RefreshToken);
+
+            if (userRefreshTokenDbo == null)
+            {
+                return NotFound("couldn't find refresh token");
+            }
+
+            User user = _dbContext.Users.FirstOrDefault(r => r.Id == userRefreshTokenDbo.Id)!;
+
+            return Ok(await _tokenService.AuthenticateUser(user));
+
         }
+
 
         [HttpPost("CreateNewUser", Name = "CreateNewUser")]
         public ActionResult<User> CreateNewUser([FromBody] CreateUserDTO userData)
@@ -101,7 +132,7 @@ namespace JojaMartAPI.Controllers
                         LastName = userData.LastName,
                         Username = userData.Username,
                         Email = userData.Email,
-                        Password = BCrypt.Net.BCrypt.HashPassword(userData.Password),
+                        PasswordHash = BCrypt.Net.BCrypt.HashPassword(userData.Password),
                         Dob = userData.Dob,
                         Gender = userData.Gender,
                         Address = userData.Address,

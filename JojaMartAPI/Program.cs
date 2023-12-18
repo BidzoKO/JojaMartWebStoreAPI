@@ -1,4 +1,3 @@
-using JojaMartAPI.Data;
 using JojaMartAPI.Services;
 using JojaMartAPI.Services.Interfaces;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
