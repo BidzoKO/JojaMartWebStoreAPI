@@ -1,7 +1,10 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using System;
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using Microsoft.EntityFrameworkCore;
 
+namespace JojaMartAPI;
 
 [Table("user_refresh_tokens")]
 public partial class UserRefreshToken
@@ -17,7 +20,7 @@ public partial class UserRefreshToken
     [Unicode(false)]
     public string RefreshToken { get; set; } = null!;
 
-    [ForeignKey("user_Id")]
-    [InverseProperty("UserRefreshToken")]
-    public virtual User IdNavigation { get; set; } = null!;
+    [ForeignKey("UserId")]
+    [InverseProperty("UserRefreshTokens")]
+    public virtual User User { get; set; } = null!;
 }

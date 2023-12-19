@@ -1,5 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 
+namespace JojaMartAPI;
 
 public partial class JojaMartDbContext : DbContext
 {
@@ -16,7 +17,6 @@ public partial class JojaMartDbContext : DbContext
 
     public virtual DbSet<UserRefreshToken> UserRefreshTokens { get; set; }
 
-
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<User>(entity =>
@@ -28,9 +28,7 @@ public partial class JojaMartDbContext : DbContext
 
         modelBuilder.Entity<UserRefreshToken>(entity =>
         {
-            entity.Property(e => e.Id).ValueGeneratedOnAdd();
-
-            entity.HasOne(d => d.IdNavigation).WithOne(p => p.UserRefreshToken)
+            entity.HasOne(d => d.User).WithMany(p => p.UserRefreshTokens)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_user_refresh_tokens_users");
         });

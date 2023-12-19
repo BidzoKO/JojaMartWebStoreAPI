@@ -1,7 +1,10 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using System;
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using Microsoft.EntityFrameworkCore;
 
+namespace JojaMartAPI;
 
 [Table("users")]
 [Index("Email", Name = "UQ__users__AB6E6164BAE3FE3F", IsUnique = true)]
@@ -75,6 +78,6 @@ public partial class User
     [Unicode(false)]
     public string? ProfilePictureUrl { get; set; }
 
-    [InverseProperty("IdNavigation")]
-    public virtual UserRefreshToken? UserRefreshToken { get; set; }
+    [InverseProperty("User")]
+    public virtual ICollection<UserRefreshToken> UserRefreshTokens { get; set; } = new List<UserRefreshToken>();
 }
