@@ -54,7 +54,7 @@ builder.Services.AddHttpContextAccessor();
 // CORS policy
 builder.Services.AddCors(p => p.AddPolicy("corsPolicy", build =>
 {
-    build.WithOrigins("*").AllowAnyMethod().AllowAnyHeader();
+    build.WithOrigins("http://127.0.0.1:5500").AllowAnyMethod().AllowAnyHeader().AllowCredentials();
 }));
 
 //Setup database connection

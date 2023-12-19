@@ -27,7 +27,7 @@ namespace JojaMartAPI.Services
                 new Claim(ClaimTypes.Email, user.Email),
             };
 
-            var expDate = DateTime.UtcNow.AddMinutes(0.5);
+            var expDate = DateTime.UtcNow.AddMinutes(15);
 
             return (GenerateJwt(expDate, claims));
         }
