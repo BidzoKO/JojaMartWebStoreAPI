@@ -27,7 +27,7 @@ namespace JojaMartAPI.Services
                 new Claim(ClaimTypes.Email, user.Email),
             };
 
-            var expDate = DateTime.UtcNow.AddMinutes(10);
+            var expDate = DateTime.UtcNow.AddMinutes(0.5);
 
             return (GenerateJwt(expDate, claims));
         }
@@ -57,6 +57,38 @@ namespace JojaMartAPI.Services
             return Task.FromResult(refreshTokenDbo);
         }
 
+
+        public Task<UserRefreshToken> GetRefreshTokenDboByAccessToken(string accessToken)
+        {
+            try
+            {
+                var tokenHandler = new JwtSecurityTokenHandler();
+
+                var jwtToken = tokenHandler.ReadToken(accessToken) as JwtSecurityToken;
+
+                if (jwtToken != null)
+                {
+                    var userId = jwtToken.Claims.FirstOrDefault(c => c.Type == "Id")?.Value;
+
+                    if (userId != null)
+                    {
+                        var refreshToken = _dbContext.UserRefreshTokens.FirstOrDefault(r => r.UserId == int.Parse(userId));
+
+                        if (refreshToken != null)
+                        {
+                            return Task.FromResult(refreshToken);
+                        }
+                    }
+                }
+                return Task.FromException<UserRefreshToken>(new InvalidOperationException("Failed to retrieve refresh token."));
+            }
+            catch (Exception ex)
+            {
+
+                return Task.FromException<UserRefreshToken>(ex);
+            }
+
+        }
 
         private string GenerateJwt(DateTime expDate, IEnumerable<Claim>? claims = null)
         {
@@ -103,6 +135,34 @@ namespace JojaMartAPI.Services
             {
 
                 return false;
+            }
+
+        }
+
+
+        public bool IsTokenExpired(string Token)
+        {
+            var jwtHandler = new JwtSecurityTokenHandler();
+            try
+            {
+                if (jwtHandler.CanReadToken(Token))
+                {
+                    var token = jwtHandler.ReadToken(Token);
+                    if (token != null)
+                    {
+                        if (token.ValidTo < DateTime.UtcNow)
+                        {
+                            return true;
+                        }
+                        return false;
+                    }
+                }
+                return false;
+            }
+            catch (Exception)
+            {
+
+                throw;
             }
 
         }

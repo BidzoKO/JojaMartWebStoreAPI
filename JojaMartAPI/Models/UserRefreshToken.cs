@@ -17,7 +17,7 @@ public partial class UserRefreshToken
     [Unicode(false)]
     public string RefreshToken { get; set; } = null!;
 
-    [ForeignKey("Id")]
+    [ForeignKey("user_Id")]
     [InverseProperty("UserRefreshToken")]
     public virtual User IdNavigation { get; set; } = null!;
 }
