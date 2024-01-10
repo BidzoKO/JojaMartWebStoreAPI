@@ -74,7 +74,7 @@ builder.Services.AddDbContext<JojaMartDbContext>(options =>
     options.UseSqlServer(connection));
 
 
-//Build app
+// Build app
 var app = builder.Build();
 
 

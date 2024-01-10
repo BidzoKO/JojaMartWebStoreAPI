@@ -46,21 +46,19 @@ namespace JojaMartAPI.Controllers
         {
             try
             {
-                var allUsers = _dbContext.Users.ToList();
+                var user = _dbContext.Users.FirstOrDefault(e => e.Email == userCredentials.Email);
 
-                var user = allUsers.FirstOrDefault(e => e.Email == userCredentials.Email);
-
-
-
-                if (user != null && BCrypt.Net.BCrypt.Verify(userCredentials.Password, user.PasswordHash))
+                if (user != null && BCrypt.Net.BCrypt.Verify(userCredentials.Password, user.PasswordHash) && user.AccountStatus == "a")
                 {
+                    user.LastLoginDate = DateTime.UtcNow;
+                    _dbContext.SaveChanges();
+
                     return Ok(await _tokenService.AuthenticateUser(user));
                 }
                 else
                 {
                     return BadRequest("Wrong email or password or the user doesnt exist");
                 }
-
             }
             catch (Exception ex)
             {
@@ -110,7 +108,7 @@ namespace JojaMartAPI.Controllers
                 return NotFound("couldn't find refresh token");
             }
 
-            User user = _dbContext.Users.FirstOrDefault(r => r.Id == userRefreshTokenDbo.Id)!;
+            User user = _dbContext.Users.FirstOrDefault(r => r.Id == userRefreshTokenDbo.UserId)!;
 
             return Ok(await _tokenService.AuthenticateUser(user));
 
@@ -118,13 +116,16 @@ namespace JojaMartAPI.Controllers
 
 
         [HttpPost("CreateNewUser", Name = "CreateNewUser")]
-        public ActionResult<User> CreateNewUser([FromBody] CreateUserDTO userData)
+        public async Task<ActionResult<AuthenticatedUserResponse>> CreateNewUser([FromBody] CreateUserDTO userData)
         {
             try
             {
-                var _userDb = _dbContext.Users;
                 if (ModelState.IsValid)
                 {
+                    if (_dbContext.Users.Any(e => e.Username == userData.Username))
+                    {
+                        return Conflict(new { Message = "A user with the same name already exists." });
+                    }
 
                     var newUser = new User
                     {
@@ -135,20 +136,20 @@ namespace JojaMartAPI.Controllers
                         PasswordHash = BCrypt.Net.BCrypt.HashPassword(userData.Password),
                         Dob = userData.Dob,
                         Gender = userData.Gender,
-                        Address = userData.Address,
-                        PhoneNumber = userData.PhoneNumber,
-                        CallingCode = userData.CallingCode,
-                        RegistrationDate = DateTime.Now,
-                        LastLoginDate = DateTime.Now,
+                        Address = userData.Address,// nullable
+                        PhoneNumber = userData.PhoneNumber,// nullable
+                        CallingCode = userData.CallingCode,// nullable
+                        RegistrationDate = DateTime.UtcNow,
+                        LastLoginDate = DateTime.UtcNow,
                         AccountStatus = "a",
                         ProfilePictureUrl = null,
                     };
 
-                    _userDb.Add(newUser);
+                    _dbContext.Users.Add(newUser);
 
                     _dbContext.SaveChanges();
 
-                    return CreatedAtAction(nameof(GetUserById), new { id = newUser.Id }, newUser);
+                    return Ok(await _tokenService.AuthenticateUser(newUser));
                 }
                 return BadRequest(ModelState);
             }
@@ -157,7 +158,6 @@ namespace JojaMartAPI.Controllers
                 return BadRequest("Database constraint violation: " + ex.Message);
             }
         }
-
     }
 }
 
