@@ -43,6 +43,9 @@ public partial class Product
     [Column("rating", TypeName = "decimal(3, 2)")]
     public decimal? Rating { get; set; }
 
+    [InverseProperty("Product")]
+    public virtual ICollection<Order> Orders { get; set; } = new List<Order>();
+
     [ForeignKey("ProductId")]
     [InverseProperty("Products")]
     public virtual ICollection<ProductCategory> Categories { get; set; } = new List<ProductCategory>();

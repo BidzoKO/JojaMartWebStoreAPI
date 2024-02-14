@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 
 namespace JojaMartAPI;
 
@@ -15,6 +13,8 @@ public partial class JojaMartDbContext : DbContext
     {
     }
 
+    public virtual DbSet<Order> Orders { get; set; }
+
     public virtual DbSet<Product> Products { get; set; }
 
     public virtual DbSet<ProductCategory> ProductCategories { get; set; }
@@ -23,12 +23,19 @@ public partial class JojaMartDbContext : DbContext
 
     public virtual DbSet<UserRefreshToken> UserRefreshTokens { get; set; }
 
-    protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-#warning To protect potentially sensitive information in your connection string, you should move it out of source code. You can avoid scaffolding the connection string by using the Name= syntax to read it from configuration - see https://go.microsoft.com/fwlink/?linkid=2131148. For more guidance on storing connection strings, see http://go.microsoft.com/fwlink/?LinkId=723263.
-        => optionsBuilder.UseSqlServer("User Id=sqlserver;Password=Bidzobiji2001;Server=34.118.28.13;Database=JojaMartDb;Encrypt=False;");
-
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        modelBuilder.Entity<Order>(entity =>
+        {
+            entity.HasOne(d => d.Product).WithMany(p => p.Orders)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_orders_products");
+
+            entity.HasOne(d => d.User).WithMany(p => p.Orders)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_orders_users");
+        });
+
         modelBuilder.Entity<Product>(entity =>
         {
             entity.HasMany(d => d.Categories).WithMany(p => p.Products)

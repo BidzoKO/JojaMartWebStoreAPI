@@ -28,6 +28,7 @@ builder.Services.AddSwaggerGen(options =>
 
 builder.Services.AddHttpClient();
 builder.Services.AddScoped<ITokenService, TokenService>();
+builder.Services.AddScoped<IOrderService, OrderServices>();
 
 builder.Services.AddAuthentication(options =>
 {

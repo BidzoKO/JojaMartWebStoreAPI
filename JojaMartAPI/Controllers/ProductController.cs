@@ -36,7 +36,7 @@ namespace JojaMartAPI.Controllers
         }
 
         [HttpGet("getPopularItems")]
-        public async Task<IActionResult> GetPopualrItems()
+        public async Task<IActionResult> GetPopualarItems()
         {
             try
             {
