@@ -90,6 +90,7 @@ namespace JojaMartAPI.Services
 
         }
 
+
         private string GenerateJwt(DateTime expDate, IEnumerable<Claim>? claims = null)
         {
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration.GetSection("AppSettings:JwtConfiguration:SecretKey").Value!));
@@ -197,6 +198,33 @@ namespace JojaMartAPI.Services
             _dbContext.SaveChanges();
 
             return Task.CompletedTask;
+        }
+
+
+        public int GetUserIdFromToken(string userToken)
+        {
+            var tokenHandler = new JwtSecurityTokenHandler();
+
+            var token = tokenHandler.ReadJwtToken(userToken);
+
+            if (token == null)
+            {
+                throw new ArgumentNullException(nameof(userToken), "Invalid JWT token");
+            }
+
+            var userIdClaim = token.Claims.FirstOrDefault(c => c.Type == "Id");
+
+            if (userIdClaim == null || string.IsNullOrEmpty(userIdClaim.Value))
+            {
+                throw new InvalidOperationException("User ID claim not found or empty");
+            }
+
+            if (!int.TryParse(userIdClaim.Value, out int userId))
+            {
+                throw new InvalidOperationException("Invalid format for user ID claim");
+            }
+
+            return userId;
         }
 
     }

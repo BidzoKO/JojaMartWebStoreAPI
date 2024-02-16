@@ -14,6 +14,7 @@ namespace JojaMartAPI.Services.Interfaces
         public Task<AuthenticatedUserResponse> AuthenticateUser(User user);
         public Task DeleteAllRefreshTokens(int userId);
         public bool IsTokenExpired(string Token);
+        public int GetUserIdFromToken(string userToken);
 
     }
 }
