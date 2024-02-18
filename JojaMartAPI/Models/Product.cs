@@ -46,6 +46,9 @@ public partial class Product
     [InverseProperty("Product")]
     public virtual ICollection<Order> Orders { get; set; } = new List<Order>();
 
+    [InverseProperty("Product")]
+    public virtual ICollection<OrdersCart> OrdersCarts { get; set; } = new List<OrdersCart>();
+
     [ForeignKey("ProductId")]
     [InverseProperty("Products")]
     public virtual ICollection<ProductCategory> Categories { get; set; } = new List<ProductCategory>();
