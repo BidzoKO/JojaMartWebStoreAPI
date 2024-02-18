@@ -1,4 +1,5 @@
-﻿using JojaMartAPI.DTOs.JwtDtos;
+﻿using JojaMartAPI.DTOs.GenericDtos;
+using JojaMartAPI.DTOs.JwtDtos;
 using JojaMartAPI.DTOs.UserDtos;
 using JojaMartAPI.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
@@ -96,21 +97,21 @@ namespace JojaMartAPI.Controllers
 
 
 		[HttpPost("RefreshJwt", Name = "RefreshJwt")]
-		public async Task<IActionResult> RefreshAcessToken([FromBody] RefreshRequest refreshRequest)
+		public async Task<IActionResult> RefreshAcessToken([FromBody] GenericStringDTO refreshToken)
 		{
 			if (!ModelState.IsValid)
 			{
 				return BadRequest("invalid model state");
 			}
 
-			var tokenValidity = _tokenService.ValidateRefreshToken(refreshRequest.RefreshToken);
+			var tokenValidity = _tokenService.ValidateRefreshToken(refreshToken.StringValue);
 
 			if (!tokenValidity)
 			{
 				return BadRequest("invalid token");
 			}
 
-			UserRefreshToken? userRefreshTokenDbo = await _tokenService.GetTokenDto(refreshRequest.RefreshToken);
+			UserRefreshToken? userRefreshTokenDbo = await _tokenService.GetTokenDto(refreshToken.StringValue);
 
 			if (userRefreshTokenDbo == null)
 			{
@@ -170,11 +171,11 @@ namespace JojaMartAPI.Controllers
 
 
 		[HttpPost("GetUserInfo", Name = "GetUserInfo"), Authorize]
-		public async Task<ActionResult<UserIdentityDTO>> GetUserInfo([FromBody] AccessTokenDTO userToken)
+		public async Task<ActionResult<UserIdentityDTO>> GetUserInfo([FromBody] GenericStringDTO accessToken)
 		{
 			try
 			{
-				var userId = _tokenService.GetUserIdFromToken(userToken.AccessToken);
+				var userId = _tokenService.GetUserIdFromToken(accessToken.StringValue);
 
 				var userDto = await _userService.GetUserIdentityByIdAsync(userId);
 
