@@ -171,11 +171,11 @@ namespace JojaMartAPI.Controllers
 
 
 		[HttpPost("GetUserInfo", Name = "GetUserInfo"), Authorize]
-		public async Task<ActionResult<UserIdentityDTO>> GetUserInfo([FromBody] GenericStringDTO accessToken)
+		public async Task<ActionResult<UserIdentityDTO>> GetUserInfo()
 		{
 			try
 			{
-				var userId = _tokenService.GetUserIdFromToken(accessToken.StringValue);
+				var userId = int.Parse(this.User.Claims.First(i => i.Type == "Id").Value);
 
 				var userDto = await _userService.GetUserIdentityByIdAsync(userId);
 
@@ -185,6 +185,16 @@ namespace JojaMartAPI.Controllers
 			{
 				return BadRequest(ex);
 			}
+		}
+
+
+		[HttpPut("UpdateUser"), Authorize]
+		public async Task<ActionResult> UpdateUser([FromBody] UpdateUserDTO newUserDetails)
+		{
+
+
+
+			return Ok();
 		}
 	}
 }

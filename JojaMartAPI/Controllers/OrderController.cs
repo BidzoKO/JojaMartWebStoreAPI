@@ -20,7 +20,7 @@ namespace JojaMartAPI.Controllers
 			_orderService = orderService;
 		}
 
-		[HttpPost("getEightOrders", Name = "getEightOrders"), Authorize()]
+		[HttpPost("GetEightOrders"), Authorize()]
 		public async Task<ActionResult<List<GetOrderDTO>>> GetEightOrders([FromBody] GenericIntDTO orderRange)
 		{
 			try
@@ -38,26 +38,87 @@ namespace JojaMartAPI.Controllers
 			}
 		}
 
-		[HttpPost("orderProduct", Name = "orderProduct"), Authorize()]
-		public async Task<IActionResult> OrderProduct([FromBody] NewOrderDTO order)
+		[HttpPost("OrderProducts"), Authorize()]
+		public async Task<IActionResult> OrderProducts()
 		{
 			try
 			{
-				var newOrder = _orderService.CreateNewOrder(order);
+				var userId = int.Parse(this.User.Claims.First(i => i.Type == "Id").Value);
 
-				await _dbContext.Orders.AddAsync(newOrder);
-
-				await _dbContext.SaveChangesAsync();
+				await _orderService.CreateNewOrder(userId);
 
 				return Ok();
 			}
-			catch (DbUpdateException ex)
+			catch (Exception ex)
 			{
 				return BadRequest(ex.Message);
 			}
 
 		}
 
+		[HttpPost("AddOrderToCart"), Authorize]
+		public async Task<ActionResult> AddOrderToCart(CartItemDTO cartItemDto)
+		{
+			try
+			{
+				var userId = int.Parse(this.User.Claims.First(i => i.Type == "Id").Value);
+
+				var newCartItem = await _orderService.AddItemToCart(userId, cartItemDto);
+
+				await _dbContext.SaveChangesAsync();
+
+				return Ok();
+			}
+			catch (Exception ex)
+			{
+
+				return BadRequest(ex);
+			}
+		}
+
+		[HttpGet("GetCartItems"), Authorize]
+		public async Task<ActionResult<List<GetCartItemDTO>>> GetCartItems()
+		{
+			try
+			{
+				var userId = int.Parse(this.User.Claims.First(i => i.Type == "Id").Value);
+
+				var cartItemList = await _orderService.CreateCartItemDtos(userId);
+
+				if (cartItemList == null) return NoContent();
+
+				return Ok(cartItemList);
+			}
+			catch (Exception ex)
+			{
+
+				return BadRequest(ex);
+			}
+
+		}
+
+		[HttpDelete("DeleteCartItem"), Authorize]
+		public async Task<ActionResult> DeleteCartItem([FromBody] GenericIntDTO itemId)
+		{
+			try
+			{
+				var userId = int.Parse(this.User.Claims.First(i => i.Type == "Id").Value);
+
+				var result = await _dbContext.OrdersCarts.FirstOrDefaultAsync(c => c.Id == itemId.IntValue && c.UserId == userId);
+
+				_dbContext.OrdersCarts.Remove(result);
+
+				await _dbContext.SaveChangesAsync();
+
+				return Ok();
+			}
+			catch (Exception ex)
+			{
+
+				return BadRequest(ex);
+			}
+
+		}
 
 	}
 }

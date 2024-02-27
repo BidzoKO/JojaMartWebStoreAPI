@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using JojaMartAPI.Models.Views;
+using Microsoft.EntityFrameworkCore;
 
 namespace JojaMartAPI;
 
@@ -25,6 +26,8 @@ public partial class JojaMartDbContext : DbContext
 
 	public virtual DbSet<UserRefreshToken> UserRefreshTokens { get; set; }
 
+	public virtual DbSet<VGetCartItem> VGetCartItems { get; set; }
+
 	protected override void OnModelCreating(ModelBuilder modelBuilder)
 	{
 		modelBuilder.Entity<Order>(entity =>
@@ -46,7 +49,7 @@ public partial class JojaMartDbContext : DbContext
 
 			entity.HasOne(d => d.User).WithMany(p => p.OrdersCarts)
 				.OnDelete(DeleteBehavior.ClientSetNull)
-				.HasConstraintName("FK_orders_cart_orders_cart");
+				.HasConstraintName("FK_orders_cart_users");
 		});
 
 		modelBuilder.Entity<Product>(entity =>
@@ -81,6 +84,11 @@ public partial class JojaMartDbContext : DbContext
 			entity.HasOne(d => d.User).WithMany(p => p.UserRefreshTokens)
 				.OnDelete(DeleteBehavior.ClientSetNull)
 				.HasConstraintName("FK_user_refresh_tokens_users");
+		});
+
+		modelBuilder.Entity<VGetCartItem>(entity =>
+		{
+			entity.ToView("v_get_cart_items");
 		});
 
 		OnModelCreatingPartial(modelBuilder);

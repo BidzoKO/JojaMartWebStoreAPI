@@ -13,30 +13,53 @@ namespace JojaMartAPI.Services
 			_dbContext = dbContext;
 		}
 
-		public Order CreateNewOrder(NewOrderDTO order)
+		public async Task CreateNewOrder(int userId)
 		{
-			var random = new Random();
+			var cartItems = await _dbContext.OrdersCarts.Where(c => c.UserId == userId).ToListAsync();
 
+			if (cartItems == null || cartItems.Count == 0)
+			{
+				return;
+			}
+
+			var user = await _dbContext.Users.FirstOrDefaultAsync(c => c.Id == userId);
+
+			var random = new Random();
 			const string chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-			var randString = new string(Enumerable.Repeat(chars, 18)
+			var randString = string.Empty;
+
+			if (user.Address == null)
+			{
+				user.Address = "your home";
+			}
+
+			var orderItems = new List<Order>();
+			foreach (var item in cartItems)
+			{
+				randString = new string(Enumerable.Repeat(chars, 18)
 				.Select(s => s[random.Next(s.Length)]).ToArray());
 
-			var newOrder = new Order
-			{
-				UserId = order.UserId,
-				ProductId = order.ProductId,
-				Quantity = order.Quantity,
-				OrderDate = DateTime.UtcNow,
-				Status = "p",
-				ShippingAddress = order.ShippingAddress,
-				TotalPrice = order.TotalPrice,
-				TrackingNumber = randString,
-			};
+				orderItems.Add(new Order
+				{
+					UserId = userId,
+					ProductId = item.ProductId,
+					Quantity = item.Quantity,
+					OrderDate = DateTime.UtcNow,
+					Status = "p",
+					ShippingAddress = user.Address,
+					TotalPrice = item.TotalPrice,
+					TrackingNumber = randString
+				});
+			}
 
-			return newOrder;
+			await using var transaction = await _dbContext.Database.BeginTransactionAsync();
 
+
+			_dbContext.OrdersCarts.RemoveRange(cartItems);
+			await _dbContext.Orders.AddRangeAsync(orderItems);
+			await _dbContext.SaveChangesAsync();
+			await transaction.CommitAsync();
 		}
-
 
 		public async Task<List<GetOrderDTO>> GetUserOrders(int userId, int orderRange)
 		{
@@ -68,5 +91,54 @@ namespace JojaMartAPI.Services
 			return orderDTOs;
 		}
 
+		public async Task<OrdersCart> AddItemToCart(int userId, CartItemDTO cartItemDto)
+		{
+			var productObject = _dbContext.Products.FirstOrDefault(c => c.ProductName == cartItemDto.ProductName);
+
+			if (productObject == null)
+			{
+				throw new ArgumentNullException(nameof(productObject));
+			}
+
+			var orderTotal = cartItemDto.Quantity * productObject.Price;
+
+			var cartItem = new OrdersCart()
+			{
+				UserId = userId,
+				ProductId = productObject.Id,
+				Quantity = cartItemDto.Quantity,
+				TotalPrice = orderTotal,
+			};
+
+			var result = await _dbContext.OrdersCarts.AddAsync(cartItem);
+			await _dbContext.SaveChangesAsync();
+
+			return cartItem;
+		}
+
+		public async Task<List<GetCartItemDTO>> CreateCartItemDtos(int userId)
+		{
+			var cartItems = await _dbContext.VGetCartItems.Where(c => c.UserId == userId).ToListAsync();
+
+			if (cartItems.Count == 0) return null;
+
+			var cartItemDtos = new List<GetCartItemDTO>();
+
+			foreach (var cartItem in cartItems)
+			{
+				if (cartItem.ImageUrl == null) throw new ArgumentNullException(nameof(cartItem.ImageUrl));
+
+				cartItemDtos.Add(new GetCartItemDTO()
+				{
+					Id = cartItem.Id,
+					ImageUrl = cartItem.ImageUrl,
+					ProductName = cartItem.ProductName,
+					Quantity = cartItem.Quantity,
+					TotalPrice = cartItem.TotalPrice,
+				});
+			}
+
+			return cartItemDtos;
+		}
 	}
 }
