@@ -1,20 +1,12 @@
-﻿using System.ComponentModel.DataAnnotations;
-
-namespace JojaMartAPI.DTOs.UserDtos
+﻿namespace JojaMartAPI.DTOs.UserDtos
 {
 	public class UpdateUserDTO
 	{
-		[Required]
+
 		public string? UserFullName { get; set; }
-		[Required]
-		public string? UserName { get; set; }
-		[Required]
+		public string? Username { get; set; }
 		public string? Address { get; set; }
-		[Required]
-		public int UserPhone { get; set; }
-		[Required]
-		public string? ImageUrl { get; set; }
-		[Required]
+		public string? UserPhone { get; set; }
 		public string? UserPassword { get; set; }
 	}
 }
