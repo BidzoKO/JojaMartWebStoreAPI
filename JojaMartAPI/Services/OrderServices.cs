@@ -63,7 +63,7 @@ namespace JojaMartAPI.Services
 
 		public async Task<List<GetOrderDTO>> GetUserOrders(int userId, int orderRange)
 		{
-			var orders = await _dbContext.Orders.Where(c => c.UserId == userId).OrderBy(c => c.OrderDate).Skip(orderRange).Take(8).ToListAsync();
+			var orders = await _dbContext.Orders.Where(c => c.UserId == userId).OrderByDescending(c => c.Id).Skip(orderRange).Take(8).ToListAsync();
 
 			var orderDTOs = new List<GetOrderDTO>();
 

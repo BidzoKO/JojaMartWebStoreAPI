@@ -42,12 +42,10 @@ namespace JojaMartAPI.Services
 		}
 
 
-		public Task StoreRefreshToken(UserRefreshToken token)
+		public async Task StoreRefreshToken(UserRefreshToken token)
 		{
-			_dbContext.UserRefreshTokens.AddAsync(token);
-			_dbContext.SaveChangesAsync();
-
-			return Task.CompletedTask;
+			await _dbContext.UserRefreshTokens.AddAsync(token);
+			await _dbContext.SaveChangesAsync();
 		}
 
 

@@ -203,30 +203,18 @@ namespace JojaMartAPI.Controllers
 				if (userNameSubstring is not { Length: 2 })
 					userNameSubstring = new string[] { userObject.FirstName, userObject.LastName };
 
-				var updatedUsername = updatedUser.Username ?? userObject.Username;
-				var updatedAddress = updatedUser.Address ?? userObject.Address;
-				var updatedPhone = updatedUser.UserPhone ?? userObject.PhoneNumber;
+				var updatedUsername = string.IsNullOrEmpty(updatedUser.Username) ? userObject.Username : updatedUser.Username;
+				var updatedAddress = string.IsNullOrEmpty(updatedUser.Address) ? userObject.Address : updatedUser.Address;
+				var updatedPhone = string.IsNullOrEmpty(updatedUser.UserPhone) ? userObject.PhoneNumber : updatedUser.UserPhone;
 				var updatedPassword = string.IsNullOrEmpty(updatedUser.UserPassword) ? userObject.PasswordHash : BCrypt.Net.BCrypt.HashPassword(updatedUser.UserPassword);
 
-				var updatedUserObject = new User()
-				{
-					Id = userObject.Id,
-					FirstName = userNameSubstring[0],
-					LastName = userNameSubstring[1],
-					Username = updatedUsername,
-					Email = userObject.Email,
-					PasswordHash = updatedPassword,
-					Address = updatedAddress,
-					PhoneNumber = updatedPhone,
-					Dob = userObject.Dob,
-					Gender = userObject.Gender,
-					CallingCode = userObject.CallingCode,
-					RegistrationDate = userObject.RegistrationDate,
-					ProfilePictureUrl = userObject.ProfilePictureUrl,
-					AccountStatus = userObject.AccountStatus,
-				};
+				userObject.FirstName = userNameSubstring[0];
+				userObject.LastName = userNameSubstring[1];
+				userObject.Username = updatedUsername;
+				userObject.PasswordHash = updatedPassword;
+				userObject.Address = updatedAddress;
+				userObject.PhoneNumber = updatedPhone;
 
-				userObject = updatedUserObject;
 				_dbContext.SaveChanges();
 
 				return Ok();
