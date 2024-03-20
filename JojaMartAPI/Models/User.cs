@@ -79,5 +79,11 @@ public partial class User
     public string? ProfilePictureUrl { get; set; }
 
     [InverseProperty("User")]
+    public virtual ICollection<Order> Orders { get; set; } = new List<Order>();
+
+    [InverseProperty("User")]
+    public virtual ICollection<OrdersCart> OrdersCarts { get; set; } = new List<OrdersCart>();
+
+    [InverseProperty("User")]
     public virtual ICollection<UserRefreshToken> UserRefreshTokens { get; set; } = new List<UserRefreshToken>();
 }
